@@ -1,0 +1,138 @@
+﻿@model IDictionary<DateTime, List<MyCalendarWeb.Models.Event>>
+@{
+    ViewData["Title"] = "Index";
+    int currentMonth = DateTime.Now.Month;
+    int currentYear = DateTime.Now.Year;
+    int lastMonth = currentMonth - 1;
+    if (lastMonth == 0)
+    {
+        lastMonth = 12;
+    }
+    DateTime firstDay = new DateTime(currentYear, currentMonth, 1);
+    int daysInCurrentMonth = DateTime.DaysInMonth(currentYear, currentMonth);
+    DateTime lastDay = new DateTime(currentYear, currentMonth, daysInCurrentMonth);
+    int dayOfWeekFirst = ((int)firstDay.DayOfWeek > 0) ? (int)firstDay.DayOfWeek : 7;
+    int dayOfWeekLast = ((int)lastDay.DayOfWeek > 0) ? (int)lastDay.DayOfWeek : 7;
+}
+<style>
+    table th{
+        vertical-align: middle !important;
+        text-align: center;
+        background-color : #87CC99;
+        width: 13%;
+    }
+    thead>tr{
+        height: 8vh;
+    }
+    tbody>tr{
+        height: 15vh;
+        text-align: center;
+    }
+    .calendar-holiday
+    {
+        color:crimson;
+    }
+    div#TitleSection{
+        display:grid;
+        grid-template-columns:20% auto 20%;
+        position:relative;
+        margin-bottom: 1vh;
+    }
+    .inside{
+        position:absolute;
+        bottom: 1vh;
+        right: 25vh;
+    }
+    .current-day{
+        background-color: #E7FFE0;
+    }
+    .not-current-month{
+        color: rgba(100, 100, 100, 0.5);
+    }
+    .btn{
+        font-size:11px;
+    }
+</style>
+<h2>My Calendar</h2>
+<div id="TitleSection">
+    <div></div>
+    <div><h3 style="text-align:center">@DateTime.Now.ToString("MMMM yyyy")</h3></div>
+    <div class="inside"><a class="btn btn-default" asp-action="Create" >Add New Event</a></div>
+</div>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th class="calendar-holiday">Sunday</th>
+            <th>Monday</th>
+            <th>Tuesday</th>
+            <th>Wednesday</th>
+            <th>Thursday</th>
+            <th>Friday</th>
+            <th class="calendar-holiday">Saturday</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            @*filling up spaces with last month*@
+            @for (int a = 1; a <= dayOfWeekFirst; a++)
+            {
+                int daysInLastMonth = DateTime.DaysInMonth(currentYear, lastMonth);
+                @:<td class="not-current-month">@(daysInLastMonth - dayOfWeekFirst + a)</td>
+            }
+            @*filling up spaces with current month*@
+            @for (int i = 1; i <= daysInCurrentMonth; i++)
+            {
+                DateTime renderedDay = new DateTime(firstDay.Year, firstDay.Month, i);
+
+                // if weekend
+                if (renderedDay.DayOfWeek == DayOfWeek.Saturday || renderedDay.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    if (renderedDay == DateTime.Now.Date)
+                    {
+                        @:<td class="calendar-holiday current-day">
+                            @:<div>@i</div>
+                    }
+                    else
+                    {
+                    @:<td class="calendar-holiday"><div>@i</div>
+                }
+                }
+                // if normal day
+                else
+                {
+                    if (renderedDay == DateTime.Now.Date)
+                    {
+                @:<td class="current-day">
+                      <div>@i</div>
+                    }
+                    else
+                    {
+                @:<td><div>@i</div>
+                    }
+                    
+                }
+                @if (Model.ContainsKey(renderedDay))
+                    {
+                        @foreach (var item in Model[renderedDay])
+                        {
+                  <div>
+                      <a asp-action="Details" asp-route-id="@item.EventID">@item.Subject</a>
+                  </div>
+                        }  
+                    }
+                @:</td>
+            //if saturday new row
+                if (renderedDay.DayOfWeek == DayOfWeek.Saturday)
+                {
+                    @:</tr><tr>
+                }
+            }
+    @*filling up spaces with next month*@
+    @for (int a = 1; a < 7-dayOfWeekLast; a++)
+    {
+        @:<td class="not-current-month">@a</td>
+    }
+</tr>
+    </tbody>
+</table>
+
